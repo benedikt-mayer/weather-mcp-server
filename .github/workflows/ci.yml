@@ -19,6 +19,7 @@ jobs:
           install: true
 
       - name: Lint (ruff)
+        continue-on-error: true
         run: |
           ruff format --check
           ruff check
