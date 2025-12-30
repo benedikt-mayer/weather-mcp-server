@@ -1,6 +1,7 @@
 try:
     import openmeteo_requests
 except Exception:  # pragma: no cover - fallback for environments without the package
+
     class _FallbackAsyncClient:
         async def weather_api(self, url, params=None):
             raise RuntimeError("openmeteo_requests not available")
@@ -15,7 +16,9 @@ except Exception:  # pragma: no cover - fallback for environments without the pa
 OPEN_METEO_BASE = "https://api.open-meteo.com/v1/forecast"
 
 
-async def make_open_meteo_request(latitude: float, longitude: float, params: dict | None = None):
+async def make_open_meteo_request(
+    latitude: float, longitude: float, params: dict | None = None
+):
     """Make a request using the openmeteo-requests AsyncClient.
 
     Returns the list of responses (FlatBuffers-based wrappers) or None on error.

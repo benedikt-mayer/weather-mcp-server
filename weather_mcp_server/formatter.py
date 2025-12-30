@@ -110,7 +110,9 @@ def _format_response(response) -> str:
             start_ts = daily.Time()
             interval = daily.Interval()
             utc_offset = (
-                response.UtcOffsetSeconds() if hasattr(response, "UtcOffsetSeconds") else 0
+                response.UtcOffsetSeconds()
+                if hasattr(response, "UtcOffsetSeconds")
+                else 0
             )
             length = max(len(tmax), len(tmin), len(precip))
             for i in range(min(3, length)):
@@ -166,7 +168,9 @@ def _format_response(response) -> str:
             start = hourly.Time()
             interval = hourly.Interval()
             utc_offset = (
-                response.UtcOffsetSeconds() if hasattr(response, "UtcOffsetSeconds") else 0
+                response.UtcOffsetSeconds()
+                if hasattr(response, "UtcOffsetSeconds")
+                else 0
             )
             length = max(len(temps), len(precs), len(winds))
             hourly_lines: list[str] = []

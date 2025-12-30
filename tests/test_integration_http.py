@@ -25,8 +25,21 @@ async def test_streamable_http_server_with_fake(tmp_path):
 
     # Start the server as a subprocess using same Python interpreter
     # Use python -c to invoke the package entrypoint function directly so it works in test environments
-    pycmd = 'import sys; from weather_mcp_server import retrieve_weather as r; r.main(sys.argv[1:])'
-    cmd = [sys.executable, "-c", pycmd, "--transport", "streamable-http", "--host", "127.0.0.1", "--port", str(port), "--mount-path", mount_path, "--use-fake"]
+    pycmd = "import sys; from weather_mcp_server import retrieve_weather as r; r.main(sys.argv[1:])"
+    cmd = [
+        sys.executable,
+        "-c",
+        pycmd,
+        "--transport",
+        "streamable-http",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        str(port),
+        "--mount-path",
+        mount_path,
+        "--use-fake",
+    ]
     env = os.environ.copy()
     # Ensure FastMCP binds to our chosen port by setting FASTMCP_* env vars before the module is imported
     # Configure the server via the WEATHER_* env vars so the module-level FastMCP picks them up at import time
@@ -34,7 +47,9 @@ async def test_streamable_http_server_with_fake(tmp_path):
     env["WEATHER_PORT"] = str(port)
     env["WEATHER_MOUNT_PATH"] = mount_path
 
-    proc = subprocess.Popen(cmd, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), env=env)
+    proc = subprocess.Popen(
+        cmd, cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), env=env
+    )
 
     try:
         # Wait for the server to be reachable
@@ -71,7 +86,9 @@ async def test_streamable_http_server_with_fake(tmp_path):
                 assert tool_name is not None, "get_forecast tool not exposed"
 
                 # Call get_forecast; use args that the fake implementation will accept
-                result = await session.call_tool(tool_name, {"latitude": 49.48, "longitude": 8.446})
+                result = await session.call_tool(
+                    tool_name, {"latitude": 49.48, "longitude": 8.446}
+                )
 
                 assert hasattr(result, "content")
                 content = result.content

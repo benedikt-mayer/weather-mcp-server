@@ -5,7 +5,11 @@ import pytest
 # Ensure project root is on sys.path so tests can import `weather`
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from weather_mcp_server.retrieve_weather import _describe_weather_code, make_open_meteo_request, get_forecast
+from weather_mcp_server.retrieve_weather import (
+    _describe_weather_code,
+    make_open_meteo_request,
+    get_forecast,
+)
 from openmeteo_sdk.Variable import Variable
 
 # Simple unit tests for WEATHER_CODE mapping

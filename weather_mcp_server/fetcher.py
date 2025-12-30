@@ -1,8 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
 
-from .client import make_open_meteo_request
-
 
 async def _fetch_responses_with_retries(
     latitude: float,
@@ -29,6 +27,7 @@ async def _fetch_responses_with_retries(
         _make = None
         try:
             from . import retrieve_weather as _retrieve
+
             _rw = getattr(_retrieve, "make_open_meteo_request", None)
         except Exception:
             _rw = None
@@ -41,6 +40,7 @@ async def _fetch_responses_with_retries(
         else:
             try:
                 from . import weather as _weather  # compatibility alias
+
                 _make = getattr(_weather, "make_open_meteo_request", None)
             except Exception:
                 _make = None
