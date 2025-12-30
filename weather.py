@@ -3,6 +3,7 @@ from mcp.server.fastmcp import FastMCP
 from datetime import datetime, timezone
 import asyncio
 from openmeteo_sdk.Variable import Variable
+import os
 
 # Initialize FastMCP server
 mcp = FastMCP("weather")
@@ -187,7 +188,9 @@ def _format_response(response) -> str:
             start_ts = daily.Time()
             interval = daily.Interval()
             utc_offset = (
-                response.UtcOffsetSeconds() if hasattr(response, "UtcOffsetSeconds") else 0
+                response.UtcOffsetSeconds()
+                if hasattr(response, "UtcOffsetSeconds")
+                else 0
             )
             length = max(len(tmax), len(tmin), len(precip))
             for i in range(min(3, length)):
@@ -301,9 +304,6 @@ def _describe_weather_code(code: int | None) -> str:
     return WEATHER_CODE_MAP.get(code, f"Code {code}")
 
 
-import os
-
-
 @mcp.tool()
 async def save_raw_forecast(latitude: float, longitude: float) -> str:
     """Fetch the raw formatted forecast and save it to the local `data/` directory.
@@ -328,7 +328,7 @@ async def save_raw_forecast(latitude: float, longitude: float) -> str:
     fname = f"data/forecast_{lat_s}_{lon_s}_{ts}.txt"
 
     header_lines = [
-        f"Metadata:",
+        "Metadata:",
         f"Timestamp: {meta.get('timestamp')}",
         f"Attempts: {meta.get('attempts')}",
         f"Hourly present: {meta.get('hourly_present')}",
