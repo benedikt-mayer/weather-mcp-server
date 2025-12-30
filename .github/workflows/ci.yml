@@ -32,10 +32,19 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      - name: Install dependencies
+      - name: Install uv and sync dependencies
         run: |
-          python -m pip install .
-          python -m pip install pytest pytest-asyncio
+          python -m pip install uv
+          uv sync || uv install
+
+      - name: Install dev tools (ruff, pytest)
+        run: |
+          python -m pip install ruff pytest pytest-asyncio
+
+      - name: Lint (ruff)
+        run: |
+          ruff format --check .
+          ruff check .
 
       - name: Run tests
-        run: pytest -q
+        run: uv run pytest -q || pytest -q
