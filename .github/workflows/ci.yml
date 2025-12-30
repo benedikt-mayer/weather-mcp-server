@@ -16,7 +16,6 @@ jobs:
       - name: Install mise and tools
         uses: jdx/mise-action@v3
         with:
-          version: "latest"
           install: true
 
       - name: Lint (ruff)
