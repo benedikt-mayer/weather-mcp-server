@@ -71,6 +71,30 @@ def _describe_weather_code(code: int | None) -> str:
     return WEATHER_CODE_MAP.get(code, f"Code {code}")
 
 
+import os
+
+
+@mcp.tool()
+async def save_raw_forecast(latitude: float, longitude: float) -> str:
+    """Fetch the raw formatted forecast (exactly as returned by get_forecast)
+    and save it to the local `data/` directory (ignored by git). Returns the file path.
+    """
+    # Reuse get_forecast to produce the same formatted text
+    text = await get_forecast(latitude, longitude)
+    if text.startswith("Unable to fetch"):
+        return text
+
+    os.makedirs("data", exist_ok=True)
+    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    # sanitize coordinates for filename
+    lat_s = str(latitude).replace(".", "p").replace("-", "m")
+    lon_s = str(longitude).replace(".", "p").replace("-", "m")
+    fname = f"data/forecast_{lat_s}_{lon_s}_{ts}.txt"
+    with open(fname, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    return fname
+
+
 @mcp.tool()
 async def get_forecast(latitude: float, longitude: float) -> str:
     """Get weather forecast for a location using Open-Meteo requests library.
@@ -214,12 +238,18 @@ async def get_forecast(latitude: float, longitude: float) -> str:
 
             start = hourly.Time()
             interval = hourly.Interval()
-            utc_offset = response.UtcOffsetSeconds() if hasattr(response, "UtcOffsetSeconds") else 0
+            utc_offset = (
+                response.UtcOffsetSeconds()
+                if hasattr(response, "UtcOffsetSeconds")
+                else 0
+            )
             length = max(len(temps), len(precs), len(winds))
             hourly_lines: list[str] = []
             for i in range(min(24, length)):
                 ts = start + i * interval + utc_offset
-                dt = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+                dt = datetime.fromtimestamp(ts, tz=timezone.utc).strftime(
+                    "%Y-%m-%d %H:%M"
+                )
                 t = temps[i] if i < len(temps) else "N/A"
                 p = precs[i] if i < len(precs) else "N/A"
                 w = winds[i] if i < len(winds) else "N/A"
