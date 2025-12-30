@@ -5,7 +5,7 @@ import pytest
 # Ensure project root is on sys.path so tests can import `weather`
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from weather_mcp_server.weather import _describe_weather_code, make_open_meteo_request, get_forecast
+from weather_mcp_server.retrieve_weather import _describe_weather_code, make_open_meteo_request, get_forecast
 from openmeteo_sdk.Variable import Variable
 
 # Simple unit tests for WEATHER_CODE mapping
@@ -151,7 +151,7 @@ async def test_get_forecast_handles_none():
     async def fake_none(lat, lon, params=None):
         return None
 
-    import weather_mcp_server.weather as w
+    import weather_mcp_server.retrieve_weather as w
 
     original = w.make_open_meteo_request
     w.make_open_meteo_request = fake_none
@@ -193,7 +193,7 @@ async def test_save_raw_forecast_creates_file(tmp_path, monkeypatch):
     monkeypatch.setattr("weather_mcp_server.weather.make_open_meteo_request", fake_make)
 
     # Run the save_raw_forecast tool and ensure file created
-    from weather_mcp_server.weather import save_raw_forecast
+    from weather_mcp_server.retrieve_weather import save_raw_forecast
 
     fname = await save_raw_forecast(49.48, 8.446)
     assert fname.startswith("data/")
@@ -241,7 +241,7 @@ async def test_retry_when_hourly_missing_then_present(monkeypatch):
 
     monkeypatch.setattr("weather_mcp_server.weather.make_open_meteo_request", fake_make)
 
-    from weather_mcp_server.weather import save_raw_forecast
+    from weather_mcp_server.retrieve_weather import save_raw_forecast
 
     fname = await save_raw_forecast(49.48, 8.446)
     assert fname.startswith("data/")
@@ -276,7 +276,7 @@ async def test_retry_exhausted_hourly_missing(monkeypatch):
 
     monkeypatch.setattr("weather_mcp_server.weather.make_open_meteo_request", fake_make)
 
-    from weather_mcp_server.weather import save_raw_forecast
+    from weather_mcp_server.retrieve_weather import save_raw_forecast
 
     fname = await save_raw_forecast(49.48, 8.446)
     with open(fname, "r", encoding="utf-8") as fh:

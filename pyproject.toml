@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-weather = "weather:main"
+weather = "weather_mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["weather*"]

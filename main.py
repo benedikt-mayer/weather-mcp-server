@@ -1,4 +1,4 @@
-from weather_mcp_server.weather import main as run
+from weather_mcp_server.retrieve_weather import main as run
 
 
 def main():
