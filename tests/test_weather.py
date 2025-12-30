@@ -206,3 +206,86 @@ async def test_save_raw_forecast_creates_file(tmp_path, monkeypatch):
         os.remove(fname)
     except OSError:
         pass
+
+
+@pytest.mark.asyncio
+async def test_retry_when_hourly_missing_then_present(monkeypatch):
+    # Create a response with no hourly (empty block) and then a full response
+    cur_vars = [FakeVar(Variable.temperature, value=5.0)]
+    current = FakeBlock(cur_vars)
+
+    daily_vars = [
+        FakeVar(Variable.temperature, values=[6.0, 7.0, 5.5], agg=2),
+        FakeVar(Variable.temperature, values=[0.0, -1.0, -2.0], agg=1),
+        FakeVar(Variable.precipitation, values=[0.0, 1.2, 0.0]),
+    ]
+    daily = FakeBlock(daily_vars, time=1609459200, interval=86400)
+
+    # Response without hourly (empty variables)
+    hourly_empty = FakeBlock([], time=1609459200, interval=3600)
+    resp_no_hourly = FakeResponse(current, daily, hourly_empty, utc_offset=0)
+
+    # Response with hourly
+    hourly_vars = [
+        FakeVar(Variable.temperature, values=[1.0] * 24),
+        FakeVar(Variable.precipitation, values=[0.0] * 24),
+        FakeVar(Variable.wind_speed, values=[3.0] * 24),
+    ]
+    hourly_full = FakeBlock(hourly_vars, time=1609459200, interval=3600)
+    resp_with_hourly = FakeResponse(current, daily, hourly_full, utc_offset=0)
+
+    seq = [[resp_no_hourly], [resp_with_hourly]]
+
+    async def fake_make(lat, lon, params=None):
+        return seq.pop(0)
+
+    monkeypatch.setattr("weather.make_open_meteo_request", fake_make)
+
+    from weather import save_raw_forecast
+
+    fname = await save_raw_forecast(49.48, 8.446)
+    assert fname.startswith("data/")
+    with open(fname, "r", encoding="utf-8") as fh:
+        content = fh.read()
+    assert "Hourly present: True" in content
+    assert "Attempts: 2" in content
+    assert "Hourly Forecast (next 24h):" in content
+
+    try:
+        os.remove(fname)
+    except OSError:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_retry_exhausted_hourly_missing(monkeypatch):
+    # Always return a response with no hourly
+    cur_vars = [FakeVar(Variable.temperature, value=5.0)]
+    current = FakeBlock(cur_vars)
+    daily_vars = [
+        FakeVar(Variable.temperature, values=[6.0, 7.0, 5.5], agg=2),
+        FakeVar(Variable.temperature, values=[0.0, -1.0, -2.0], agg=1),
+        FakeVar(Variable.precipitation, values=[0.0, 1.2, 0.0]),
+    ]
+    daily = FakeBlock(daily_vars, time=1609459200, interval=86400)
+    hourly_empty = FakeBlock([], time=1609459200, interval=3600)
+    resp_no_hourly = FakeResponse(current, daily, hourly_empty, utc_offset=0)
+
+    async def fake_make(lat, lon, params=None):
+        return [resp_no_hourly]
+
+    monkeypatch.setattr("weather.make_open_meteo_request", fake_make)
+
+    from weather import save_raw_forecast
+
+    fname = await save_raw_forecast(49.48, 8.446)
+    with open(fname, "r", encoding="utf-8") as fh:
+        content = fh.read()
+    assert "Hourly present: False" in content
+    assert "Attempts: 3" in content
+    assert "Hourly forecast: not available." in content
+
+    try:
+        os.remove(fname)
+    except OSError:
+        pass
