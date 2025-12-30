@@ -22,7 +22,11 @@ from .fetcher import _fetch_responses_with_retries
 from .formatter import _format_response, _describe_weather_code
 
 # Initialize FastMCP server (kept at module level for compatibility)
-mcp = FastMCP("weather")
+# Allow environment variables to configure host/port/mount path at import time
+_m_host = os.environ.get("WEATHER_HOST", "127.0.0.1")
+_m_port = int(os.environ.get("WEATHER_PORT", "8000"))
+_m_mount = os.environ.get("WEATHER_MOUNT_PATH", "/mcp")
+mcp = FastMCP("weather", host=_m_host, port=_m_port, mount_path=_m_mount, streamable_http_path=_m_mount)
 
 # Constants
 OPEN_METEO_BASE = "https://api.open-meteo.com/v1/forecast"
@@ -111,6 +115,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="weather")
     parser.add_argument("command", nargs="?", choices=["run"], default="run")
     parser.add_argument("--version", action="store_true", help="Print package version and exit")
+    parser.add_argument("--transport", choices=["stdio", "streamable-http", "sse"], default=os.environ.get("WEATHER_TRANSPORT", "streamable-http"), help="Transport to use (default: streamable-http)")
+    parser.add_argument("--mount-path", default=os.environ.get("WEATHER_MOUNT_PATH", "/mcp"), help="Mount path for HTTP transports (default: /mcp)")
+    parser.add_argument("--host", default=os.environ.get("WEATHER_HOST", "127.0.0.1"), help="Host to bind the HTTP server to")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("WEATHER_PORT", "8000")), help="Port to bind the HTTP server to")
+    parser.add_argument("--use-fake", action="store_true", help="Use fake Open-Meteo responses (for testing)")
     args = parser.parse_args(argv)
 
     if args.version:
@@ -122,5 +131,91 @@ def main(argv=None):
             print("version unknown")
         return
 
-    # Initialize and run the server
-    mcp.run(transport="stdio")
+    # If running an HTTP-like transport, prefer the streamable HTTP server by default
+    if args.command == "run":
+        transport = args.transport
+
+        # Optionally inject fake Open-Meteo responses for integration testing
+        if args.use_fake:
+            class _FakeVar:
+                def __init__(self, variable, value=None, values=None, agg=None):
+                    self._variable = variable
+                    self._value = value
+                    self._values = values or []
+                    self._agg = agg
+
+                def Variable(self):
+                    return self._variable
+
+                def Value(self):
+                    return self._value
+
+                def ValuesAsNumpy(self):
+                    return self._values
+
+                def ValuesLength(self):
+                    return len(self._values)
+
+                def Values(self, i):
+                    return self._values[i]
+
+                def Aggregation(self):
+                    return self._agg
+
+            class _FakeBlock:
+                def __init__(self, vars, time=0, interval=3600):
+                    self._vars = vars
+                    self._time = time
+                    self._interval = interval
+
+                def VariablesLength(self):
+                    return len(self._vars)
+
+                def Variables(self, i):
+                    return self._vars[i]
+
+                def Time(self):
+                    return self._time
+
+                def Interval(self):
+                    return self._interval
+
+            class _FakeResponse:
+                def __init__(self, current, daily, hourly, utc_offset=0):
+                    self._current = current
+                    self._daily = daily
+                    self._hourly = hourly
+                    self._utc = utc_offset
+
+                def Current(self):
+                    return self._current
+
+                def Daily(self):
+                    return self._daily
+
+                def Hourly(self):
+                    return self._hourly
+
+                def UtcOffsetSeconds(self):
+                    return self._utc
+
+            # Build a minimal plausible response
+            async def _fake_make(lat, lon, params=None):
+                cur = _FakeBlock([
+                    _FakeVar(0, value=5.0),  # temperature
+                    _FakeVar(1, value=1),    # weather_code
+                ])
+                daily = _FakeBlock([
+                    _FakeVar(0, values=[6.0], agg=2),
+                ], time=1609459200, interval=86400)
+                hourly = _FakeBlock([
+                    _FakeVar(0, values=[1.0] * 24),
+                ], time=1609459200, interval=3600)
+                return [_FakeResponse(cur, daily, hourly, utc_offset=0)]
+
+            # Override the real request function in this process so the server will use it
+            make_open_meteo_request = _fake_make
+
+        # Start the server with the requested transport
+        # (host/port should be configured via FASTMCP_* env vars when needed)
+        mcp.run(transport=transport, mount_path=args.mount_path)

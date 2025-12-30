@@ -23,7 +23,7 @@ Install as an editable package and use the `weather` console script:
 ```bash
 python -m pip install -e .
 weather --version  # prints package version
-weather           # starts the MCP server (same as `python main.py`)
+weather           # starts the MCP server (same as `python main.py`, serves HTTP at http://127.0.0.1:8000/mcp by default)
 ```
 
 ## Documentation

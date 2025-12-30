@@ -8,6 +8,7 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.25.0",
     "openmeteo-requests>=1.7.4",
+    "openmeteo-sdk",
     "pytest>=7.0",
     "pytest-asyncio>=0.22",
 ]

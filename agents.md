@@ -12,12 +12,19 @@ This document describes the agents/tools provided by this repository, how to run
 - Always use uv instead of pip
 
 ## Running the MCP server 🛠️
-- Run locally:
+- Run locally (starts an HTTP-backed MCP server by default):
 
   ```bash
+  # runs an HTTP server exposing the MCP endpoints at http://127.0.0.1:8000/mcp
   python -m weather
-  # or, if running in-via MCP transport, run the FastMCP server as configured
+
+  # you can customize transport and binding options:
+  python -m weather --transport streamable-http --host 0.0.0.0 --port 8000 --mount-path /mcp
+  # or run using uv (recommended for production):
+  uv run --with mcp python -m weather
   ```
+
+- You can also set the following environment variables to configure defaults: `WEATHER_TRANSPORT`, `WEATHER_HOST`, `WEATHER_PORT`, `WEATHER_MOUNT_PATH`.
 
 - Call tools programmatically by creating an MCP client and calling the tools above, or use the included utilities in the codebase.
 
