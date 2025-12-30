@@ -21,9 +21,8 @@ except Exception:  # pragma: no cover - fallback for test environments without m
 import os
 
 # Re-exported/adapted pieces from the refactored modules
-from .client import make_open_meteo_request
 from .fetcher import _fetch_responses_with_retries
-from .formatter import _format_response, _describe_weather_code
+from .formatter import _format_response
 
 # Initialize FastMCP server (kept at module level for compatibility)
 # Allow environment variables to configure host/port/mount path at import time
