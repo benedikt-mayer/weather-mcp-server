@@ -21,30 +21,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
-
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
       - name: Install uv and sync dependencies
         run: |
           python -m pip install uv
-          uv sync || uv install
-
-      - name: Install dev tools (ruff, pytest)
-        run: |
-          python -m pip install ruff pytest pytest-asyncio
+          uv sync --extra dev
 
       - name: Lint (ruff)
         run: |
-          ruff format --check .
-          ruff check .
+          ruff format --check
+          ruff check
 
       - name: Run tests
-        run: uv run pytest -q || pytest -q
+        run: uv run pytest --dev
