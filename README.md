@@ -12,6 +12,20 @@ This project provides an MCP (Microservice Control Protocol) `weather` server th
 - Forecast by coordinates (Munich): `get_forecast(48.1351, 11.5820)`
 - Forecast for central Michigan: `get_forecast(44.3148, -85.6024)`
 
+Run the server locally:
+
+```bash
+python main.py
+```
+
+Install as an editable package and use the `weather` console script:
+
+```bash
+python -m pip install -e .
+weather --version  # prints package version
+weather           # starts the MCP server (same as `python main.py`)
+```
+
 ## Documentation
 - See `agents.md` for details about the exposed MCP tools, retry/diagnostic behavior, and debugging tips.
 - See `CONTRIBUTING.md` for local development setup, testing, and linting instructions.

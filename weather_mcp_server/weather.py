@@ -364,10 +364,27 @@ async def get_forecast(latitude: float, longitude: float) -> str:
     return _format_response(resp)
 
 
-def main():
+def main(argv=None):
+    """Entry point for running the weather MCP server.
+
+    Accepts an optional argv list (for console scripts or tests). Supported options:
+      --version    Print package version and exit
+      run (default) Start the MCP server
+    """
+    import argparse
+    parser = argparse.ArgumentParser(prog="weather")
+    parser.add_argument("command", nargs="?", choices=["run"], default="run")
+    parser.add_argument("--version", action="store_true", help="Print package version and exit")
+    args = parser.parse_args(argv)
+
+    if args.version:
+        try:
+            from importlib.metadata import version
+
+            print(version("weather"))
+        except Exception:
+            print("version unknown")
+        return
+
     # Initialize and run the server
     mcp.run(transport="stdio")
-
-
-if __name__ == "__main__":
-    main()

@@ -11,3 +11,10 @@ dependencies = [
     "pytest>=7.0",
     "pytest-asyncio>=0.22",
 ]
+
+[project.scripts]
+weather = "weather:main"
+
+[tool.setuptools.packages.find]
+include = ["weather*"]
+exclude = ["data", "tests", "mcp-client"]

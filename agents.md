@@ -8,6 +8,9 @@ This document describes the agents/tools provided by this repository, how to run
   - `get_forecast(latitude, longitude)` → human-readable summary (Now, Daily, Hourly when available)
   - `save_raw_forecast(latitude, longitude)` → saves a timestamped raw file in `data/` with a diagnostic header
 
+## Tooling
+- Always use uv instead of pip
+
 ## Running the MCP server 🛠️
 - Run locally:
 
