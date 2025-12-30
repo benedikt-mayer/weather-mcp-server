@@ -4,7 +4,7 @@ This project provides an MCP (Microservice Control Protocol) `weather` server th
 
 ## Changes
 - Replaced National Weather Service (NWS) usage with Open-Meteo (`https://api.open-meteo.com`).
-- `get_forecast(latitude, longitude)` now returns current weather and a short daily summary (next 3 days) based on Open-Meteo.
+- `get_forecast(latitude, longitude)` now returns current weather, a short daily summary (next 3 days), and an hourly forecast (next 24 hours) when available, using the Open-Meteo client.
 - `get_alerts(state)` now returns a message explaining that Open-Meteo does not provide state-level alerts and suggests alternatives.
 
 ## Usage examples

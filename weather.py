@@ -20,9 +20,10 @@ async def make_open_meteo_request(
     default_params = {
         "latitude": latitude,
         "longitude": longitude,
-        # ask for current weather block and daily summaries
+        # ask for current weather, daily summaries and hourly variables
         "current_weather": True,
         "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum"],
+        "hourly": ["temperature_2m", "precipitation", "wind_speed_10m"],
         "timezone": "auto",
     }
 
@@ -184,6 +185,51 @@ async def get_forecast(latitude: float, longitude: float) -> str:
             parts.append("Daily forecast: not available.")
     except Exception:
         parts.append("Daily forecast: not available.")
+
+    # Hourly summary (next 24 hours)
+    try:
+        hourly = response.Hourly()
+        if hourly and hourly.VariablesLength() > 0:
+            temps = []
+            precs = []
+            winds = []
+
+            for vi in range(hourly.VariablesLength()):
+                var = hourly.Variables(vi)
+                v = var.Variable()
+                try:
+                    values = var.ValuesAsNumpy().tolist()
+                except Exception:
+                    try:
+                        values = [var.Values(i) for i in range(var.ValuesLength())]
+                    except Exception:
+                        values = []
+
+                if v == Variable.temperature:
+                    temps = values
+                elif v == Variable.precipitation:
+                    precs = values
+                elif v == Variable.wind_speed:
+                    winds = values
+
+            start = hourly.Time()
+            interval = hourly.Interval()
+            utc_offset = response.UtcOffsetSeconds() if hasattr(response, "UtcOffsetSeconds") else 0
+            length = max(len(temps), len(precs), len(winds))
+            hourly_lines: list[str] = []
+            for i in range(min(24, length)):
+                ts = start + i * interval + utc_offset
+                dt = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+                t = temps[i] if i < len(temps) else "N/A"
+                p = precs[i] if i < len(precs) else "N/A"
+                w = winds[i] if i < len(winds) else "N/A"
+                hourly_lines.append(f"{dt}: {t}°C, Precip: {p} mm, Wind: {w} km/h")
+
+            parts.append("Hourly Forecast (next 24h):\n" + "\n".join(hourly_lines))
+        else:
+            parts.append("Hourly forecast: not available.")
+    except Exception:
+        parts.append("Hourly forecast: not available.")
 
     return "\n---\n".join(parts)
 
