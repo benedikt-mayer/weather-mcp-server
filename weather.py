@@ -76,7 +76,7 @@ async def _fetch_responses_with_retries(
     metadata = {
         "attempts": attempt,
         "hourly_present": bool(hourly_present),
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
     # try to collect additional metadata if available
@@ -322,7 +322,7 @@ async def save_raw_forecast(latitude: float, longitude: float) -> str:
     text = _format_response(resp)
 
     os.makedirs("data", exist_ok=True)
-    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     lat_s = str(latitude).replace(".", "p").replace("-", "m")
     lon_s = str(longitude).replace(".", "p").replace("-", "m")
     fname = f"data/forecast_{lat_s}_{lon_s}_{ts}.txt"
