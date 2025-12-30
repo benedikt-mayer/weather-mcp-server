@@ -13,25 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install mise and tools
+        uses: jdx/mise-action@v2
         with:
-          python-version: 3.12
-
-      - name: Install mise
-        run: |
-          curl https://mise.jdx.dev/install.sh | sh
-          export PATH="$HOME/.local/share/mise/bin:$HOME/.local/share/mise/shims:$PATH"
-          echo "PATH=$PATH" >> $GITHUB_ENV
-
-      - name: Install tools from .mise.toml
-        run: |
-          export PATH="$HOME/.local/share/mise/bin:$HOME/.local/share/mise/shims:$PATH"
-          mise install
-
-      - name: Sync dependencies
-        run: |
-          uv sync --extra dev
+          version: "latest"
+          install: true
 
       - name: Lint (ruff)
         run: |

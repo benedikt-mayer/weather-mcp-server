@@ -48,6 +48,8 @@ This document describes the agents/tools provided by this repository, how to run
 - Tests: `pytest` with `pytest-asyncio` is used. Tests live in `tests/test_weather.py`.
 - Linting: `ruff` is used. CI runs `ruff format --check .` and `ruff check .`.
 - **After every code change, run:** `ruff check --fix .` and `ruff format .` to ensure code quality and consistency.
+- **Commit and push separately:** run `git commit` first, then `git push` as separate steps (no chained commit+push commands).
+- Always ask before pushing to any remote.
 - CI: GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/pull_request, uses `uv` to sync dependencies from `uv.lock`, runs ruff checks and pytest.
 
 ## Debugging tips 🐞
