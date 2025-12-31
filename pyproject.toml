@@ -30,4 +30,4 @@ addopts = "-v"
 
 [tool.setuptools.packages.find]
 include = ["weather*"]
-exclude = ["data", "tests", "mcp-client"]
+exclude = ["data", "tests"]

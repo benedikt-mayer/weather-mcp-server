@@ -25,4 +25,4 @@ jobs:
           ruff check
 
       - name: Run tests
-        run: uv run --dev pytest
+        run: uv run --extra dev pytest
