@@ -1,24 +1,8 @@
+import os
 from datetime import datetime, timezone
 
-try:
-    from mcp.server.fastmcp import FastMCP
-except Exception:  # pragma: no cover - fallback for test environments without mcp
-
-    class FastMCP:  # lightweight fallback used for tests and import-time safety
-        def __init__(self, *_args, **_kwargs):
-            pass
-
-        def tool(self):
-            def _dec(f):
-                return f
-
-            return _dec
-
-        def run(self, *args, **kwargs):
-            return None
-
-
-import os
+import anyio
+from mcp.server.fastmcp import FastMCP
 
 # Re-exported/adapted pieces from the refactored modules
 from .client import make_open_meteo_request  # noqa: F401
@@ -27,9 +11,9 @@ from .formatter import _format_response, _describe_weather_code  # noqa: F401
 
 # Initialize FastMCP server (kept at module level for compatibility)
 # Allow environment variables to configure host/port/mount path at import time
-_m_host = os.environ.get("WEATHER_HOST", "127.0.0.1")
-_m_port = int(os.environ.get("WEATHER_PORT", "8000"))
-_m_mount = os.environ.get("WEATHER_MOUNT_PATH", "/mcp")
+_m_host = "127.0.0.1"
+_m_port = 8000
+_m_mount = "/mcp"
 mcp = FastMCP(
     "weather",
     host=_m_host,
@@ -170,6 +154,12 @@ def main(argv=None):
     if args.command == "run":
         transport = args.transport
 
+        # Apply runtime configuration overrides
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        mcp.settings.mount_path = args.mount_path
+        mcp.settings.streamable_http_path = args.mount_path
+
         # Optionally inject fake Open-Meteo responses for integration testing
         if args.use_fake:
 
@@ -260,5 +250,11 @@ def main(argv=None):
                 return [_FakeResponse(cur, daily, hourly, utc_offset=0)]
 
         # Start the server with the requested transport
-        # (host/port should be configured via FASTMCP_* env vars when needed)
-        mcp.run(transport=transport, mount_path=args.mount_path)
+        if transport == "stdio":
+            anyio.run(mcp.run_stdio_async)
+        elif transport == "sse":
+            anyio.run(mcp.run_sse_async, args.mount_path)
+        elif transport == "streamable-http":
+            anyio.run(mcp.run_streamable_http_async)
+        else:  # pragma: no cover
+            raise ValueError(f"Unsupported transport: {transport}")
